@@ -8,11 +8,16 @@ export function useUser() {
   const [isLoading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
+
     async function load() {
       const { data: { user: authUser } } = await supabase.auth.getUser();
+
       if (!authUser) {
-        setUser(null);
-        setLoading(false);
+        if (active) {
+          setUser(null);
+          setLoading(false);
+        }
         return;
       }
 
@@ -22,16 +27,20 @@ export function useUser() {
         .eq("id", authUser.id)
         .single();
 
-      setUser({ ...authUser, ...perfil });
-      setLoading(false);
+      if (active) {
+        setUser({ ...authUser, ...perfil });
+        setLoading(false);
+      }
     }
 
     load();
 
-    // Realtime auth listener
-    const { data: listener } = supabase.auth.onAuthStateChange(() => load());
+    const { data: subscription } = supabase.auth.onAuthStateChange(() => load());
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      active = false;
+      subscription?.subscription?.unsubscribe();
+    };
   }, []);
 
   return { user, isLoading };

@@ -24,3 +24,104 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+.fc .fc-toolbar-title {
+  color: #3B6E7F !important;
+  font-weight: 600;
+}
+
+.fc .fc-button-primary {
+  background-color: #567E8D !important;
+  border: none !important;
+}
+
+.fc .fc-daygrid-day-number {
+  color: #3B6E7F !important;
+}
+
+.fc-event {
+  background-color: #3B6E7F !important;
+  border: none !important;
+  color: white !important;
+}
+/* ================================
+   FULLCALENDAR — ACCESIBILIDAD
+   ================================ */
+
+/* Fondo general más visible */
+.fc-theme-standard .fc-scrollgrid {
+  border-color: #d0d7df !important;
+}
+
+/* Cabecera del calendario (días de la semana) */
+.fc-col-header-cell {
+  background-color: #e6eef3 !important;
+  color: #2c3e50 !important;
+  font-weight: 600 !important;
+}
+
+/* Texto del día en vista month */
+.fc-daygrid-day-number {
+  color: #2c3e50 !important;
+  font-weight: 600;
+}
+
+/* Día seleccionado (background accesible) */
+.fc-daygrid-day.fc-day-today {
+  background: #dbeafe !important;  /* Azul suave accesible */
+  color: #1e40af !important;
+}
+
+/* Botones del header (today, next, prev, month, week, day) */
+.fc .fc-button {
+  background: #3B6E7F !important;       /* azul petróleo */
+  border: none !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.fc .fc-button:hover {
+  background: #2e5664 !important; 
+}
+
+/* Botón activo (vista seleccionada) */
+.fc .fc-button.fc-button-active {
+  background: #1f2937 !important;   /* gris oscuro accesible */
+  color: white !important;
+}
+
+/* Grid de horas (semana/día) */
+.fc-timegrid-slot-label {
+  color: #3b3b3b !important;
+  font-weight: 500;
+}
+
+/* Líneas del grid */
+.fc-timegrid-slot {
+  border-color: #d6d6d6 !important;
+}
+
+/* Eventos — contrastados */
+.fc-event {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  padding: 4px !important;
+  border-radius: 6px !important;
+}
+
+/* Evento Confirmada */
+.fc-event.fc-event-confirmada {
+  background: #15803d !important;  /* verde oscuro accesible */
+  border-color: #15803d !important;
+}
+
+/* Evento Pendiente */
+.fc-event.fc-event-pendiente {
+  background: #ca8a04 !important; /* amarillo/miel accesible */
+  border-color: #b45309 !important;
+}
+
+/* Evento Cancelada */
+.fc-event.fc-event-cancelada {
+  background: #b91c1c !important; /* rojo oscuro accesible */
+  border-color: #7f1d1d !important;
+}
