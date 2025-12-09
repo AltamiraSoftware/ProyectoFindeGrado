@@ -1,15 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
-export const revalidate = 0;
-export const runtime = "edge"; // opcional, pero optimiza CSR
-
-
-
-
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import { supabase } from "@/lib/supabaseClient";
@@ -46,7 +37,8 @@ const IconUser = () => (
   </svg>
 );
 
-export default function ClienteDashboard() {
+// Componente interno que usa useSearchParams
+function ClienteDashboardContent() {
   const { user, isLoading } = useUser();
   const searchParams = useSearchParams();
 
@@ -81,7 +73,6 @@ export default function ClienteDashboard() {
       });
     }
   }, [success]);
-  
 
   /* ===========================
       2) PROTEGER RUTA
@@ -157,7 +148,7 @@ export default function ClienteDashboard() {
         const day = new Date(d);
         day.setHours(0, 0, 0, 0);
 
-        if (day < today) return; // ❌ bloquear días pasados
+        if (day < today) return; // bloquear días pasados
 
         const dateKey = d.toISOString().split("T")[0];
         const timeStr = d.toLocaleTimeString("es-ES", {
@@ -207,7 +198,7 @@ export default function ClienteDashboard() {
       const [h, m] = timeStr.split(":");
       const slot = new Date();
       slot.setHours(h, m, 0, 0);
-      if (slot < now) return; // ❌ evitar horas pasadas hoy
+      if (slot < now) return; // evitar horas pasadas hoy
     }
 
     setSelectedTime(timeStr);
@@ -418,5 +409,14 @@ export default function ClienteDashboard() {
         profile={profileData}
       />
     </div>
+  );
+}
+
+// Componente principal con Suspense
+export default function ClienteDashboard() {
+  return (
+    <Suspense fallback={<div className="p-6">Cargando...</div>}>
+      <ClienteDashboardContent />
+    </Suspense>
   );
 }
