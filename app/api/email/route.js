@@ -1,4 +1,4 @@
-// app/api/emails/route.js
+
 import { NextResponse } from "next/server";
 import { resend } from "@/lib/resendClient";
 
