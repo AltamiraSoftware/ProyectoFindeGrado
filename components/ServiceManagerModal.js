@@ -2,258 +2,212 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { PencilSquareIcon } from "@heroicons/react/24/outline";
 
 export default function ServiceManagerModal({ open, onClose }) {
-
-  // ❗ TODOS LOS HOOKS DEBEN IR ANTES DE CUALQUIER return
-  const [loading, setLoading] = useState(true);
+  /* ============================================================
+      HOOKS — SIEMPRE AL INICIO
+  ============================================================ */
   const [servicios, setServicios] = useState([]);
-  const [refresh, setRefresh] = useState(false);
+  const [nombre, setNombre] = useState("");
+  const [precio, setPrecio] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [form, setForm] = useState({
-    nombre: "",
-    descripcion: "",
-    duracion_minutos: "",
-    precio: "",
-  });
-
-  const [mensaje, setMensaje] = useState("");
-  const [creando, setCreando] = useState(false);
-
-  // ============================
-  //     FETCH SERVICIOS
-  // ============================
-  async function fetchServicios() {
-    const { data, error } = await supabase
-      .from("servicios")
-      .select("*")
-      .order("creado_en", { ascending: false });
-
-    if (!error) setServicios(data || []);
-    setLoading(false);
-  }
-
+  /* ============================================================
+      CARGAR SERVICIOS — NUNCA LLAMAR CONDICIONALMENTE
+  ============================================================ */
   useEffect(() => {
-    async function cargar() {
+    if (!open) return; // OK: condición DENTRO del hook, NO rodeando el hook
+
+    async function cargarServicios() {
       setLoading(true);
-      await fetchServicios();
-    }
-    cargar();
-  }, [refresh]);
 
-  // ============================
-  //    CREAR SERVICIO
-  // ============================
-  async function handleCrearServicio(e) {
-    e.preventDefault();
-    setCreando(true);
-    setMensaje("");
+      const { data, error } = await supabase
+        .from("servicios")
+        .select("*")
+        .order("id", { ascending: true });
 
-    const { nombre, descripcion, duracion_minutos, precio } = form;
-
-    const { error } = await supabase.from("servicios").insert({
-      nombre,
-      descripcion,
-      duracion_minutos: Number(duracion_minutos),
-      precio: Number(precio),
-      esta_activo: true,
-    });
-
-    if (error) {
-      setMensaje("❌ Error al crear el servicio.");
-      setCreando(false);
-      return;
+      if (!error) setServicios(data || []);
+      setLoading(false);
     }
 
-    setMensaje("✅ Servicio creado.");
+    cargarServicios();
+  }, [open]);
 
-    setForm({
-      nombre: "",
-      descripcion: "",
-      duracion_minutos: "",
-      precio: "",
-    });
-
-    setCreando(false);
-    setRefresh(!refresh);
-  }
-
-  // ============================
-  //   TOGGLE ESTADO SERVICIO
-  // ============================
-  async function toggleEstado(id, estado) {
-    await supabase
-      .from("servicios")
-      .update({ esta_activo: !estado })
-      .eq("id", id);
-
-    setRefresh(!refresh);
-  }
-
-  // ============================
-  //        RETURN UI
-  // ============================
+  /* ============================================================
+      RETURN TEMPRANO — DEBE IR DESPUÉS DE TODOS LOS HOOKS
+  ============================================================ */
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+  /* ============================================================
+      CREAR SERVICIO
+  ============================================================ */
+  async function handleSave(e) {
+    e.preventDefault();
+    setSaving(true);
 
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Gestión de Servicios</h2>
+    const { error } = await supabase
+      .from("servicios")
+      .insert({
+        nombre,
+        precio,
+        esta_activo: true,
+      });
+
+    if (!error) {
+      setNombre("");
+      setPrecio("");
+
+      const { data } = await supabase
+        .from("servicios")
+        .select("*")
+        .order("id");
+
+      setServicios(data || []);
+    }
+
+    setSaving(false);
+  }
+
+  /* ============================================================
+      ACTIVAR / DESACTIVAR SERVICIO
+  ============================================================ */
+  async function toggleActivo(servicio) {
+    await supabase
+      .from("servicios")
+      .update({ esta_activo: !servicio.esta_activo })
+      .eq("id", servicio.id);
+
+    const { data } = await supabase
+      .from("servicios")
+      .select("*")
+      .order("id");
+
+    setServicios(data || []);
+  }
+
+  /* ============================================================
+      UI
+  ============================================================ */
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+
+      {/* Fondo oscuro */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden animate-fadeIn">
+
+        {/* HEADER CORPORATIVO */}
+        <div className="p-5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 text-white flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M9 17v-6h6v6m3 4H6a2 2 0 01-2-2V6a2 2 0 012-2h3l1-2h4l1 2h3a2 2 0 012 2v13a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+
+            <h2 className="text-lg font-bold">Gestión de Servicios</h2>
+          </div>
 
           <button
             onClick={onClose}
-            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold"
+            className="text-white text-xl font-bold hover:text-red-200 transition"
           >
-            Cerrar
+            ✕
           </button>
         </div>
 
-        {/* FORMULARIO */}
-        <form
-          onSubmit={handleCrearServicio}
-          className="space-y-4 bg-gray-50 p-4 rounded-lg border mb-8"
-        >
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">
-            Crear nuevo servicio
-          </h3>
+        {/* CONTENIDO */}
+        <div className="p-6 space-y-6">
 
-          {/* Campos */}
+          {/* LISTA DE SERVICIOS */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Nombre del servicio
-            </label>
-            <input
-              type="text"
-              value={form.nombre}
-              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-              className="w-full border rounded px-3 py-2 text-gray-800"
-              required
-            />
-          </div>
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">
+              Servicios existentes
+            </h3>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Descripción
-            </label>
-            <textarea
-              value={form.descripcion}
-              onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-              rows={2}
-              className="w-full border rounded px-3 py-2 text-gray-800"
-              required
-            />
-          </div>
+            {loading ? (
+              <p className="text-gray-500 text-sm">Cargando servicios…</p>
+            ) : servicios.length === 0 ? (
+              <p className="text-gray-500">No hay servicios registrados.</p>
+            ) : (
+              <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                {servicios.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex items-center justify-between p-4 rounded-xl border 
+                               shadow-sm bg-white 
+                               border-blue-200 hover:border-purple-400 
+                               hover:shadow-md transition"
+                  >
+                    <div>
+                      <p className="font-semibold text-gray-800">{s.nombre}</p>
+                      <p className="text-sm text-gray-600">{s.precio} €</p>
+                    </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Duración (minutos)
-            </label>
-            <input
-              type="number"
-              value={form.duracion_minutos}
-              min="10"
-              onChange={(e) =>
-                setForm({ ...form, duracion_minutos: e.target.value })
-              }
-              className="w-full border rounded px-3 py-2 text-gray-800"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Precio (€)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={form.precio}
-              onChange={(e) => setForm({ ...form, precio: e.target.value })}
-              className="w-full border rounded px-3 py-2 text-gray-800"
-              required
-            />
-          </div>
-
-          {mensaje && (
-            <p className="text-center text-sm font-medium">{mensaje}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={creando}
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white py-2 rounded font-semibold"
-          >
-            {creando ? "Creando..." : "Crear servicio"}
-          </button>
-        </form>
-
-        {/* LISTADO */}
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">
-          Servicios existentes
-        </h3>
-
-        {loading ? (
-          <div className="text-center text-gray-500">Cargando...</div>
-        ) : servicios.length === 0 ? (
-          <div className="text-center text-gray-500">
-            No hay servicios creados.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {servicios.map((s) => (
-              <div
-                key={s.id}
-                className="bg-white border rounded-xl shadow p-5 flex flex-col justify-between"
-              >
-                <div>
-                  <h4 className="text-lg font-bold text-gray-800">
-                    {s.nombre}
-                  </h4>
-
-                  <p className="text-gray-600 mt-1">{s.descripcion}</p>
-
-                  <div className="mt-3 text-sm text-gray-700">
-                    <span className="block">🕒 Duración: {s.duracion_minutos} min</span>
-                    <span className="block">💶 Precio: {s.precio} €</span>
+                    <button
+                      onClick={() => toggleActivo(s)}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium text-white
+                        ${
+                          s.esta_activo
+                            ? "bg-red-600 hover:bg-red-700"
+                            : "bg-green-600 hover:bg-green-700"
+                        }
+                      `}
+                    >
+                      {s.esta_activo ? "Desactivar" : "Activar"}
+                    </button>
                   </div>
-
-                  <span
-                    className={`inline-block mt-3 px-3 py-1 text-xs rounded-full font-semibold ${
-                      s.esta_activo
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {s.esta_activo ? "Activo" : "Inactivo"}
-                  </span>
-                </div>
-
-                <div className="flex justify-end gap-3 mt-4">
-                  <button
-                    onClick={() => toggleEstado(s.id, s.esta_activo)}
-                    className={`px-4 py-2 rounded-lg text-white font-semibold ${
-                      s.esta_activo
-                        ? "bg-red-600 hover:bg-red-700"
-                        : "bg-green-600 hover:bg-green-700"
-                    }`}
-                  >
-                    {s.esta_activo ? "Desactivar" : "Activar"}
-                  </button>
-
-                  <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-semibold flex items-center gap-2">
-                    <PencilSquareIcon className="w-5 h-5" />
-                    Editar
-                  </button>
-                </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
+
+          {/* FORMULARIO NUEVO SERVICIO */}
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">
+              Añadir nuevo servicio
+            </h3>
+
+            <form onSubmit={handleSave} className="grid grid-cols-1 gap-4">
+              <input
+                required
+                placeholder="Nombre del servicio"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+              />
+
+              <input
+                required
+                type="number"
+                min="1"
+                placeholder="Precio (€)"
+                value={precio}
+                onChange={(e) => setPrecio(e.target.value)}
+                className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+              />
+
+              <button
+                disabled={saving}
+                className="py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
+              >
+                {saving ? "Guardando…" : "Guardar servicio"}
+              </button>
+            </form>
+          </div>
+
+        </div>
       </div>
     </div>
   );

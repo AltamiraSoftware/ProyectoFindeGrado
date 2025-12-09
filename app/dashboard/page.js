@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 import LogoutButtom from "@/components/LogoutButtom";
 import { supabase } from "@/lib/supabaseClient";
 import "@/app/globals.css";
-import  ServiceManagerModal from"@/components/ServiceManagerModal";
+import Header from "@/components/header";
+import ServiceManagerModal from "@/components/ServiceManagerModal";
 import CalendarSection from "@/components/CalendarSection";
 import DayAppoinments from "@/components/DayAppoinments";
 import CreateAppoinmentModal from "@/components/CreateAppoinmentModal";
@@ -18,7 +19,6 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-
   const [citas, setCitas] = useState([]);
   const [loadingCitas, setLoadingCitas] = useState(true);
 
@@ -43,12 +43,14 @@ export default function DashboardPage() {
     franja: "",
     notas: "",
   });
-  const [modalServicios, setModalServicios] = useState(false);
 
+  const [modalServicios, setModalServicios] = useState(false);
   const [modalDetallesAbierto, setModalDetallesAbierto] = useState(false);
   const [detalleCita, setDetalleCita] = useState(null);
 
-  // PROTECCIÓN DE RUTA
+  /* ====================================================
+     PROTECCIÓN DE RUTA
+  ==================================================== */
   useEffect(() => {
     if (!isLoading) {
       if (!user) router.replace("/auth/login");
@@ -56,7 +58,9 @@ export default function DashboardPage() {
     }
   }, [user, isLoading, router]);
 
-  // CARGAR CITAS DEL MES
+  /* ====================================================
+     CARGAR CITAS DEL MES — CORREGIDO (estado_pago añadido)
+  ==================================================== */
   useEffect(() => {
     if (!user || user.rol !== "profesional") return;
 
@@ -78,26 +82,33 @@ export default function DashboardPage() {
       );
 
       const { data, error } = await supabase
-        .from("citas_sesiones")  // ⚠️ si el nombre real es "citas_sesiones", corrígelo aquí
-        .select(
-          "id, id_cliente, hora_inicio, hora_fin, estado_cita, notas_cliente, id_franja_disponibilidad"
-        )
+        .from("citas_sesiones")
+        .select(`
+          id,
+          id_cliente,
+          hora_inicio,
+          hora_fin,
+          estado_cita,
+          estado_pago,
+          notas_cliente,
+          id_franja_disponibilidad
+        `)
         .eq("id_profesional", user.id)
         .gte("hora_inicio", startOfMonth.toISOString())
         .lte("hora_inicio", endOfMonth.toISOString());
 
-      if (!error) {
-        setCitas(data || []);
-      }
+      if (!error) setCitas(data || []);
       setLoadingCitas(false);
     }
 
     fetchCitas();
   }, [user, selectedDate]);
 
-  // CARGAR CLIENTES
+  /* ====================================================
+     CARGAR CLIENTES
+  ==================================================== */
   useEffect(() => {
-    if (!user || user.rol !== "profesional") return;
+    if (!user) return;
 
     async function fetchClientes() {
       const { data } = await supabase
@@ -111,7 +122,9 @@ export default function DashboardPage() {
     fetchClientes();
   }, [user]);
 
-  // CARGAR SERVICIOS / FRANJAS (solo cuando abrimos modal)
+  /* ====================================================
+     CARGAR SERVICIOS + FRANJAS para el modal
+  ==================================================== */
   useEffect(() => {
     if (!modalCitaAbierto || !user) return;
 
@@ -137,11 +150,12 @@ export default function DashboardPage() {
     fetchData();
   }, [modalCitaAbierto, user]);
 
-  // EVENTOS PARA FULLCALENDAR
+  /* ====================================================
+     EVENTOS PARA FULLCALENDAR
+  ==================================================== */
   const eventos = citas.map((c) => ({
     id: c.id,
-    title:
-      c.estado_cita.charAt(0).toUpperCase() + c.estado_cita.slice(1),
+    title: c.estado_cita.charAt(0).toUpperCase() + c.estado_cita.slice(1),
     start: c.hora_inicio,
     end: c.hora_fin,
     backgroundColor:
@@ -164,7 +178,6 @@ export default function DashboardPage() {
     extendedProps: { ...c },
   }));
 
-  // CITAS DEL DÍA
   const citasDelDia = citas.filter((c) => {
     const d = new Date(c.hora_inicio);
     return (
@@ -174,20 +187,22 @@ export default function DashboardPage() {
     );
   });
 
-  // RESUMEN SEMANA
-  function getStartOfWeek(date) {
+  /* ====================================================
+     RESUMEN SEMANAL
+  ==================================================== */
+  const getStartOfWeek = (date) => {
     const d = new Date(date);
     d.setDate(d.getDate() - d.getDay());
     d.setHours(0, 0, 0, 0);
     return d;
-  }
+  };
 
-  function getEndOfWeek(date) {
+  const getEndOfWeek = (date) => {
     const d = new Date(date);
     d.setDate(d.getDate() - d.getDay() + 6);
     d.setHours(23, 59, 59, 999);
     return d;
-  }
+  };
 
   const startOfWeek = getStartOfWeek(selectedDate);
   const endOfWeek = getEndOfWeek(selectedDate);
@@ -199,58 +214,62 @@ export default function DashboardPage() {
 
   const resumenSemana = {
     total: citasSemana.length,
-    confirmadas: citasSemana.filter((c) => c.estado_cita === "confirmada")
-      .length,
-    pendientes: citasSemana.filter((c) => c.estado_cita === "pendiente")
-      .length,
-    canceladas: citasSemana.filter((c) => c.estado_cita === "cancelada")
-      .length,
+    pendientes: citasSemana.filter((c) => c.estado_cita === "pendiente").length,
+    pagadas: citasSemana.filter((c) => c.estado_pago === "pagado").length,
+    canceladas: citasSemana.filter((c) => c.estado_cita === "cancelada").length,
   };
+  
 
-  // HANDLERS ---------------------
-
+  /* ====================================================
+     CREAR CITA
+  ==================================================== */
   async function handleCrearCita(e) {
     e.preventDefault();
     if (!user) return;
 
     setLoadingModal(true);
 
-    const franja = franjasDisponibles.find(
-      (f) => f.id == formCita.franja
-    );
-    const servicio = servicios.find(
-      (s) => s.id == formCita.servicio
-    );
+    const franja = franjasDisponibles.find((f) => f.id == formCita.franja);
+    const servicio = servicios.find((s) => s.id == formCita.servicio);
 
     if (!franja || !servicio) {
+      alert("Error: faltan datos.");
       setLoadingModal(false);
       return;
     }
 
-    await supabase.from("citas_sesiones").insert({
-      id_cliente: formCita.cliente,
-      id_profesional: user.id,
-      id_franja_disponibilidad: franja.id,
-      id_servicio: servicio.id,
-      hora_inicio: franja.hora_inicio,
-      hora_fin: franja.hora_fin,
-      precio_acordado: servicio.precio || 0,
-      estado_cita: "reservada",
-      estado_pago: "pendiente",
-      notas_cliente: formCita.notas,
+    const res = await fetch("/api/citas/crear", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id_cliente: formCita.cliente,
+        id_profesional: user.id,
+        id_franja: franja.id,
+        id_servicio: servicio.id,
+        notas: formCita.notas,
+        pago: null,
+      }),
     });
 
-    await supabase
-      .from("franjas_disponibilidad")
-      .update({ esta_disponible: false })
-      .eq("id", franja.id);
+    const result = await res.json();
+
+    if (!result.success) {
+      alert("Error creando cita: " + result.error);
+      setLoadingModal(false);
+      return;
+    }
 
     setModalCitaAbierto(false);
     setFormCita({ cliente: "", servicio: "", franja: "", notas: "" });
     window.location.reload();
   }
 
+  /* ====================================================
+     CANCELAR CITA
+  ==================================================== */
   async function handleCancelarCita(id, idFranja) {
+    if (!id) return;
+
     await supabase
       .from("citas_sesiones")
       .update({ estado_cita: "cancelada" })
@@ -266,24 +285,26 @@ export default function DashboardPage() {
     window.location.reload();
   }
 
+  /* ====================================================
+     CREAR NUEVO PACIENTE
+  ==================================================== */
   async function handleCrearNuevoPaciente() {
     if (!user) return;
 
     setCreandoPaciente(true);
 
-    const { data: authData, error: authError } =
-      await supabase.auth.signUp({
-        email: formNuevoPaciente.email,
-        password: "tempPassword123",
-      });
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: formNuevoPaciente.email,
+      password: "tempPassword123",
+    });
 
     if (authError) {
-      alert("Error al crear el usuario: " + authError.message);
+      alert("Error al crear usuario: " + authError.message);
       setCreandoPaciente(false);
       return;
     }
 
-    if (authData.user) {
+    if (authData?.user) {
       const { error: perfilError } = await supabase
         .from("perfiles_usuarios")
         .insert({
@@ -295,7 +316,7 @@ export default function DashboardPage() {
         });
 
       if (perfilError) {
-        alert("Error al crear el perfil: " + perfilError.message);
+        alert("Error al crear perfil: " + perfilError.message);
         setCreandoPaciente(false);
         return;
       }
@@ -309,59 +330,42 @@ export default function DashboardPage() {
       setFormCita((f) => ({ ...f, cliente: authData.user.id }));
 
       setShowNuevoPaciente(false);
-      setFormNuevoPaciente({
-        nombre_completo: "",
-        email: "",
-        telefono: "",
-      });
+      setFormNuevoPaciente({ nombre_completo: "", email: "", telefono: "" });
 
-      alert("Paciente creado exitosamente");
+      alert("Paciente creado correctamente");
     }
 
     setCreandoPaciente(false);
   }
 
-  function abrirDetallesCita(datos) {
+  const abrirDetallesCita = (datos) => {
     setDetalleCita(datos);
     setModalDetallesAbierto(true);
-  }
+  };
 
-  function cerrarDetallesCita() {
+  const cerrarDetallesCita = () => {
     setModalDetallesAbierto(false);
     setDetalleCita(null);
-  }
+  };
 
-  if (isLoading || !user) return <div className="p-8">Cargando...</div>;
+  /* ====================================================
+     RENDER
+  ==================================================== */
+
+  if (isLoading || !user)
+    return <div className="p-8">Cargando...</div>;
+
   if (user.rol !== "profesional") return null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-100 to-white p-6">
-      {/* CABECERA */}
-      <div className="w-full max-w-6xl mx-auto mb-6 flex flex-col md:flex-row items-center justify-between">
-        <div className="rounded-xl shadow-lg bg-white p-0 flex-1 flex flex-col md:flex-row items-center justify-between mb-4 border border-gray-100">
-          <div className="w-full rounded-t-xl bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 p-6 flex flex-col md:flex-row items-center justify-between">
-            <h1 className="text-3xl font-bold text-white drop-shadow">
-              Calendario de Citas
-            </h1>
-            <span className="text-white text-lg font-semibold mt-2 md:mt-0">
-              Gestiona tus citas de psicología de manera eficiente
-            </span>
-          </div>
-        </div>
-        <a
-          href="/dashboard/disponibilidad"
-          className="mt-4 md:mt-0 ml-0 md:ml-6 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-semibold shadow transition"
-        >
-          Gestionar Disponibilidad
-        </a>
-        <button
-  onClick={() => setModalServicios(true)}
-  className="mt-4 md:mt-0 ml-0 md:ml-3 bg-purple-600 hover:bg-purple-700 text-white px-5 py-3 rounded-xl font-semibold shadow transition"
->
-  Gestionar Servicios
-</button>
+    <main className="min-h-screen bg-gradient-to-b from-blue-100 to-white ">
+     <Header onOpenServicios={() => setModalServicios(true)} />
 
-      </div>
+<ServiceManagerModal
+  open={modalServicios}
+  onClose={() => setModalServicios(false)}
+/>
+
 
       {/* GRID PRINCIPAL */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 w-full max-w-6xl mx-auto">
@@ -407,7 +411,6 @@ export default function DashboardPage() {
         creandoPaciente={creandoPaciente}
         onCrearNuevoPaciente={handleCrearNuevoPaciente}
       />
-      
 
       {/* MODAL DETALLES CITA */}
       <AppointmentDetailsModal
@@ -415,11 +418,12 @@ export default function DashboardPage() {
         detalleCita={detalleCita}
         onClose={cerrarDetallesCita}
       />
-        <ServiceManagerModal
-  open={modalServicios}
-  onClose={() => setModalServicios(false)}
-/>
 
+      {/* MODAL SERVICIOS */}
+      <ServiceManagerModal
+        open={modalServicios}
+        onClose={() => setModalServicios(false)}
+      />
 
     </main>
   );

@@ -1,127 +1,354 @@
 @import "tailwindcss";
 
+/* -------------------------------------------------------
+   1. PALETA GLOBAL — MARCA PRINCIPAL
+   ------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand-start: #2563eb; /* azul */
+  --brand-mid: #7c3aed;   /* violeta */
+  --brand-end: #ec4899;   /* rosa */
+
+  --text-main: #1f2937;   /* gris oscuro accesible */
+  --text-muted: #6b7280;
+
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --input-text: #1f2937;
+  --input-placeholder: #9ca3af;
+
+  --focus-ring: #2563eb33; /* azul suave */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* =======================================================
+   2. RESET BASE
+   ======================================================= */
+body {
+  background: #f8fafc;
+  color: var(--text-main);
+  font-family: system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+h1{
+  color:var(--text-main);
+}
+h2, h3, h4 {
+  color: white;
+  line-height: 1.2;
+}
+
+/* =======================================================
+   3. GRADIENTS DE MARCA (utility classes)
+   ======================================================= */
+.brand-gradient {
+  background: linear-gradient(90deg, var(--brand-start), var(--brand-mid), var(--brand-end));
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, var(--brand-start), var(--brand-mid), var(--brand-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 800;
+}
+
+/* =======================================================
+   4. CARDS PREMIUM (SaaS modern)
+   ======================================================= */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+  transition: transform .20s ease, box-shadow .20s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+}
+.card h3 {
+  color: white;
+}
+
+
+/* =======================================================
+   5. INPUTS — ACCESIBLES
+   ======================================================= */
+input,
+textarea,
+select {
+  background: var(--input-bg);
+  border: 1.8px solid var(--input-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 15px;
+  color: var(--input-text);
+  transition: all .15s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder);
+  opacity: 1;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--brand-mid);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+  outline: none;
+}
+
+/* SELECT mejorado */
+select {
+  background-color: white;
+  background-image: linear-gradient(to right, var(--brand-start), var(--brand-mid), var(--brand-end));
+  background-size: 100% 3px;
+  background-position: bottom;
+  background-repeat: no-repeat;
+  padding-right: 35px;
+}
+
+select::-ms-expand {
+  display: none;
+}
+
+/* =======================================================
+   6. BOTONES
+   ======================================================= */
+.btn-primary {
+  background: linear-gradient(90deg, var(--brand-start), var(--brand-mid), var(--brand-end));
+  color: white !important;
+  padding: 12px 26px;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: .2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  opacity: .9;
+}
+
+.btn-secondary {
+  border: 2px solid var(--brand-mid);
+  color: var(--brand-mid);
+  padding: 12px 26px;
+  font-weight: 600;
+  border-radius: 12px;
+  background: white;
+  transition: .2s;
+}
+
+.btn-secondary:hover {
+  background: var(--brand-mid);
+  color: white;
+}
+
+/* =======================================================
+   7. MODALES PREMIUM
+   ======================================================= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(3px);
+  z-index: 40;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  animation: fadeInUp .35s ease-out forwards;
+}
+
+/* =======================================================
+   8. ANIMACIONES
+   ======================================================= */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-.fc .fc-toolbar-title {
-  color: #3B6E7F !important;
-  font-weight: 600;
-}
+/* =======================================================
+   9. FULLCALENDAR (NO CAMBIAR POR AHORA)
+   ======================================================= */
 
-.fc .fc-button-primary {
-  background-color: #567E8D !important;
-  border: none !important;
-}
-
-.fc .fc-daygrid-day-number {
-  color: #3B6E7F !important;
-}
-
-.fc-event {
-  background-color: #3B6E7F !important;
-  border: none !important;
-  color: white !important;
-}
-/* ================================
-   FULLCALENDAR — ACCESIBILIDAD
-   ================================ */
-
-/* Fondo general más visible */
+/* Fondo general */
 .fc-theme-standard .fc-scrollgrid {
   border-color: #d0d7df !important;
 }
 
-/* Cabecera del calendario (días de la semana) */
+/* Cabecera */
 .fc-col-header-cell {
   background-color: #e6eef3 !important;
   color: #2c3e50 !important;
   font-weight: 600 !important;
 }
 
-/* Texto del día en vista month */
+/* Números */
 .fc-daygrid-day-number {
   color: #2c3e50 !important;
   font-weight: 600;
 }
 
-/* Día seleccionado (background accesible) */
+/* Día actual */
 .fc-daygrid-day.fc-day-today {
-  background: #dbeafe !important;  /* Azul suave accesible */
+  background: #dbeafe !important;
   color: #1e40af !important;
 }
 
-/* Botones del header (today, next, prev, month, week, day) */
+/* Botones */
 .fc .fc-button {
-  background: #3B6E7F !important;       /* azul petróleo */
-  border: none !important;
+  background: #3B6E7F !important;
   color: white !important;
-  font-weight: 600 !important;
+  border: none !important;
+  font-weight: 600;
 }
 
 .fc .fc-button:hover {
-  background: #2e5664 !important; 
+  background: #2e5664 !important;
 }
 
-/* Botón activo (vista seleccionada) */
 .fc .fc-button.fc-button-active {
-  background: #1f2937 !important;   /* gris oscuro accesible */
+  background: #1f2937 !important;
   color: white !important;
 }
 
-/* Grid de horas (semana/día) */
-.fc-timegrid-slot-label {
-  color: #3b3b3b !important;
-  font-weight: 500;
-}
-
-/* Líneas del grid */
-.fc-timegrid-slot {
-  border-color: #d6d6d6 !important;
-}
-
-/* Eventos — contrastados */
+/* Eventos */
 .fc-event {
-  color: #ffffff !important;
-  font-weight: 600 !important;
+  color: #fff !important;
   padding: 4px !important;
   border-radius: 6px !important;
+  font-weight: 600;
 }
 
-/* Evento Confirmada */
-.fc-event.fc-event-confirmada {
-  background: #15803d !important;  /* verde oscuro accesible */
-  border-color: #15803d !important;
+/* Estados */
+.fc-event-confirmada {
+  background: #15803d !important;
+}
+.fc-event-pendiente {
+  background: #ca8a04 !important;
+}
+.fc-event-cancelada {
+  background: #b91c1c !important;
+}
+.nav-link {
+  font-weight: 500;
+  color: var(--text-main);
+  position: relative;
 }
 
-/* Evento Pendiente */
-.fc-event.fc-event-pendiente {
-  background: #ca8a04 !important; /* amarillo/miel accesible */
-  border-color: #b45309 !important;
+.nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--brand-start), var(--brand-mid), var(--brand-end));
+  transition: width .25s ease;
 }
 
-/* Evento Cancelada */
-.fc-event.fc-event-cancelada {
-  background: #b91c1c !important; /* rojo oscuro accesible */
-  border-color: #7f1d1d !important;
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.mobile-link {
+  display: block;
+  padding: 10px 0;
+  font-weight: 500;
+  color: var(--text-main);
+}
+body {
+  background: #f9fafb; /* o lo que estés usando */
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.card-header-gradient {
+  background: linear-gradient(90deg, var(--brand-start), var(--brand-mid), var(--brand-end));
+  padding: 18px 22px;
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  color: white !important;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+/* ------------------------------
+   📌 TARJETAS (Dashboard Cliente)
+------------------------------ */
+.card-panel {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+/* Encabezado estilo premium */
+.card-header-gradient {
+  background: linear-gradient(90deg, #2563eb, #7c3aed, #ec4899);
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-radius: 16px 16px 0 0;
+}
+
+/* Icono dentro de un badge */
+.icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.25);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: white;
+}
+
+/* Título blanco */
+.card-header-gradient .title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: white;
+}
+
+/* Subtítulo accesible */
+.card-header-gradient .subtitle {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.9);
+  margin-top: 2px;
+}
+
+.dashboard-section {
+  background: linear-gradient(
+    to bottom right, 
+    #eef2ff 0%, 
+    #f5e1ff 50%, 
+    #ffe4f2 100%
+  );
+  min-height: 100vh;
+  padding: 40px 0;
 }

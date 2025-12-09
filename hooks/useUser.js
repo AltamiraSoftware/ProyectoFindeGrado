@@ -10,10 +10,8 @@ export function useUser() {
   useEffect(() => {
     let active = true;
 
-    async function load() {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-
-      if (!authUser) {
+    async function loadUser(sessionUser) {
+      if (!sessionUser) {
         if (active) {
           setUser(null);
           setLoading(false);
@@ -24,22 +22,35 @@ export function useUser() {
       const { data: perfil } = await supabase
         .from("perfiles_usuarios")
         .select("*")
-        .eq("id", authUser.id)
+        .eq("id", sessionUser.id)
         .single();
 
       if (active) {
-        setUser({ ...authUser, ...perfil });
+        setUser({ ...sessionUser, ...perfil });
         setLoading(false);
       }
     }
 
-    load();
+    // 1️⃣ Cargar usuario al montar
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      loadUser(user);
+    });
 
-    const { data: subscription } = supabase.auth.onAuthStateChange(() => load());
+    // 2️⃣ Detectar login / logout en tiempo real
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session?.user) {
+          loadUser(session.user);   // login
+        } else {
+          setUser(null);            // logout
+          setLoading(false);
+        }
+      }
+    );
 
     return () => {
       active = false;
-      subscription?.subscription?.unsubscribe();
+      authListener?.subscription?.unsubscribe();
     };
   }, []);
 

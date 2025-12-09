@@ -2,41 +2,53 @@
 
 export default function WeekSummary({ resumenSemana }) {
   return (
-    <section className="bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 rounded-xl shadow-lg p-6 mb-8">
-      <h2 className="text-xl font-bold text-white mb-2">
-        Resumen de la Semana
-      </h2>
-      <p className="text-white mb-4">
-        Vista general de las próximas citas
-      </p>
+    <section className="w-full max-w-6xl mx-auto mt-10 mb-16">
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-4 flex flex-col items-center shadow">
-          <span className="text-2xl font-bold text-blue-700">
-            {resumenSemana.total}
-          </span>
-          <span className="text-gray-700 text-sm">Citas esta semana</span>
-        </div>
+      {/* =================== ENCABEZADO CORPORATIVO =================== */}
+      <div className="rounded-t-2xl bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 p-6 shadow-lg">
+        <h2 className="text-2xl font-bold text-white">Resumen de la Semana</h2>
+        <p className="text-white/80 text-sm">
+          Estado general de las citas programadas esta semana
+        </p>
+      </div>
 
-        <div className="bg-green-100 rounded-lg p-4 flex flex-col items-center shadow">
-          <span className="text-2xl font-bold text-green-700">
-            {resumenSemana.confirmadas}
-          </span>
-          <span className="text-gray-700 text-sm">Confirmadas</span>
-        </div>
+      {/* =================== CONTENIDO =================== */}
+      <div className="bg-white border border-gray-200 rounded-b-2xl shadow-xl p-6">
 
-        <div className="bg-yellow-100 rounded-lg p-4 flex flex-col items-center shadow">
-          <span className="text-2xl font-bold text-yellow-700">
-            {resumenSemana.pendientes}
-          </span>
-          <span className="text-gray-700 text-sm">Pendientes</span>
-        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
 
-        <div className="bg-red-100 rounded-lg p-4 flex flex-col items-center shadow">
-          <span className="text-2xl font-bold text-red-700">
-            {resumenSemana.canceladas}
-          </span>
-          <span className="text-gray-700 text-sm">Canceladas</span>
+          {/* Total */}
+          <div className="bg-blue-200 rounded-xl p-5 flex flex-col items-center shadow-md">
+            <span className="text-3xl font-bold text-blue-700">
+              {resumenSemana.total}
+            </span>
+            <span className="text-gray-700 text-sm">Total de citas</span>
+          </div>
+
+          {/* Pendientes */}
+          <div className="bg-purple-200 rounded-xl p-5 flex flex-col items-center shadow-md">
+            <span className="text-3xl font-bold text-yellow-600">
+              {resumenSemana.pendientes}
+            </span>
+            <span className="text-gray-700 text-sm">Pendientes</span>
+          </div>
+
+          {/* Pagadas */}
+          <div className="bg-green-200 rounded-xl p-5 flex flex-col items-center shadow-md">
+            <span className="text-3xl font-bold text-green-700">
+              {resumenSemana.pagadas}
+            </span>
+            <span className="text-gray-700 text-sm">Pagadas</span>
+          </div>
+
+          {/* Canceladas */}
+          <div className="bg-pink-200 rounded-xl p-5 flex flex-col items-center shadow-md">
+            <span className="text-3xl font-bold text-red-600">
+              {resumenSemana.canceladas}
+            </span>
+            <span className="text-gray-700 text-sm">Canceladas</span>
+          </div>
+
         </div>
       </div>
     </section>
