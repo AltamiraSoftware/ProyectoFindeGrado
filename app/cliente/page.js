@@ -13,7 +13,9 @@ import BookingConfirmation from "@/components/ClienteDash/booking-confirmation";
 import AccountSettingsModal from "@/components/ClienteDash/AccountSettingsModal";
 import ChatModal from "@/components/chat/ChatModal";
 
-/* ICONOS */
+/* =============================
+   ICONOS
+============================= */
 const IconCalendar = () => (
   <svg width="26" height="26" fill="none" stroke="white" strokeWidth="2">
     <rect x="3" y="4" width="18" height="18" rx="3" />
@@ -37,10 +39,28 @@ const IconUser = () => (
   </svg>
 );
 
-// Componente interno que usa useSearchParams
+/* =============================
+   COMPONENTE PARA DETECTAR SUCCESS
+   (separado para usar useSearchParams)
+============================= */
+function SuccessDetector({ onSuccess }) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const success = searchParams.get("success");
+    if (success === "true") {
+      onSuccess();
+    }
+  }, [searchParams, onSuccess]);
+
+  return null;
+}
+
+/* =============================
+   COMPONENTE PRINCIPAL
+============================= */
 function ClienteDashboardContent() {
   const { user, isLoading } = useUser();
-  const searchParams = useSearchParams();
 
   /* ===========================
       ESTADOS
@@ -49,6 +69,8 @@ function ClienteDashboardContent() {
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const [bookingStep, setBookingStep] = useState("calendar");
+  
+  // 🔥 CORREGIDO: inicializar con fecha válida
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [selectedService, setSelectedService] = useState("");
@@ -59,20 +81,6 @@ function ClienteDashboardContent() {
 
   const [chatOpen, setChatOpen] = useState(false);
   const [profesionalId, setProfesionalId] = useState(null);
-
-  /* ===========================
-      1) MOSTRAR MODAL ÉXITO
-  ============================*/
-  const success = searchParams.get("success");
-  const session_id = searchParams.get("session_id");
-
-  useEffect(() => {
-    if (success === "true") {
-      queueMicrotask(() => {
-        setShowSuccessModal(true);
-      });
-    }
-  }, [success]);
 
   /* ===========================
       2) PROTEGER RUTA
@@ -120,7 +128,6 @@ function ClienteDashboardContent() {
 
   /* ===========================
       5) CARGAR FRANJAS + SERVICIOS
-      (solo futuras)
   ============================*/
   useEffect(() => {
     if (!user) return;
@@ -148,7 +155,7 @@ function ClienteDashboardContent() {
         const day = new Date(d);
         day.setHours(0, 0, 0, 0);
 
-        if (day < today) return; // bloquear días pasados
+        if (day < today) return;
 
         const dateKey = d.toISOString().split("T")[0];
         const timeStr = d.toLocaleTimeString("es-ES", {
@@ -173,9 +180,8 @@ function ClienteDashboardContent() {
   }, [user]);
 
   /* ===========================
-      MANEJADORES DE RESERVA
+      MANEJADORES
   ============================*/
-
   const handleDateSelect = (dateStr) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -198,7 +204,7 @@ function ClienteDashboardContent() {
       const [h, m] = timeStr.split(":");
       const slot = new Date();
       slot.setHours(h, m, 0, 0);
-      if (slot < now) return; // evitar horas pasadas hoy
+      if (slot < now) return;
     }
 
     setSelectedTime(timeStr);
@@ -213,36 +219,99 @@ function ClienteDashboardContent() {
   };
 
   async function handleConfirmBooking() {
+    // Validación completa antes de procesar
     if (!selectedDate || !selectedTime || !selectedService) {
-      alert("Selecciona fecha, hora y servicio.");
+      alert("❌ Por favor, selecciona fecha, hora y servicio.");
       return;
     }
 
+    if (!user?.id) {
+      alert("❌ Error: usuario no identificado.");
+      return;
+    }
+
+    // Buscar franja en los datos cargados
     const franjaObj = availabilityData[selectedDate]?.find(
       (f) => f.time === selectedTime
     );
 
-    const res = await fetch("/api/cliente/crear-sesion-pago", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id_cliente: user.id,
-        id_servicio: selectedService,
-        id_franja: franjaObj.id,
-      }),
+    // Validar que la franja existe
+    if (!franjaObj || !franjaObj.id) {
+      console.error("❌ Franja no encontrada:", {
+        selectedDate,
+        selectedTime,
+        availabilityData: availabilityData[selectedDate]
+      });
+      alert("❌ Error: la franja horaria ya no está disponible. Por favor, selecciona otra hora.");
+      handleReset(); // Reiniciar selección
+      return;
+    }
+
+    console.log("✅ Creando sesión de pago con:", {
+      id_cliente: user.id,
+      id_servicio: selectedService,
+      id_franja: franjaObj.id,
+      hora_inicio: franjaObj.hora_inicio
     });
 
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
+    try {
+      const res = await fetch("/api/cliente/crear-sesion-pago", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_cliente: user.id,
+          id_servicio: selectedService,
+          id_franja: franjaObj.id,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("❌ Error del servidor:", errorData);
+        alert(`❌ Error: ${errorData.error || "No se pudo crear la sesión de pago"}`);
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.error) {
+        alert("❌ Error: " + data.error);
+        return;
+      }
+
+      if (data.url) {
+        console.log("✅ Redirigiendo a Stripe...");
+        window.location.href = data.url;
+      } else {
+        alert("❌ Error: no se recibió URL de pago");
+      }
+    } catch (error) {
+      console.error("❌ Error de red:", error);
+      alert("❌ Error de conexión. Por favor, inténtalo de nuevo.");
+    }
   }
 
   /* ===========================
       LOADING
   ============================*/
-  if (isLoading || !user) return <div className="p-6">Cargando...</div>;
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      {/* 🔥 DETECTOR DE SUCCESS EN SUSPENSE */}
+      <Suspense fallback={null}>
+        <SuccessDetector onSuccess={() => setShowSuccessModal(true)} />
+      </Suspense>
+
       <Header />
 
       <main className="container mx-auto px-4 py-8 pt-24">
@@ -251,7 +320,6 @@ function ClienteDashboardContent() {
           {/* CALENDARIO */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-
               <div className="bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 p-6 text-white flex items-center gap-3">
                 <IconCalendar />
                 <div>
@@ -268,7 +336,7 @@ function ClienteDashboardContent() {
                   />
                 )}
 
-                {bookingStep === "slots" && (
+                {bookingStep === "slots" && selectedDate && (
                   <TimeSlots
                     date={selectedDate}
                     timeSlots={availabilityData[selectedDate]?.map((f) => f.time) || []}
@@ -293,11 +361,10 @@ function ClienteDashboardContent() {
             </div>
           </div>
 
-          {/* RESUMEN + CHAT + AJUSTES */}
+          {/* RESUMEN + CITAS + CHAT */}
           <div className="space-y-6">
-
             {/* RESUMEN */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden top-24">
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               <div className="bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 p-6 text-white flex items-center gap-3">
                 <IconClock />
                 <h3 className="text-xl font-bold">Resumen</h3>
@@ -356,19 +423,20 @@ function ClienteDashboardContent() {
                 Parámetros de la cuenta
               </button>
             </div>
-
           </div>
         </div>
       </main>
 
       {/* CHAT */}
-      <ChatModal
-        idCliente={user.id}
-        idProfesional={profesionalId}
-        userId={user.id}
-        isOpen={chatOpen}
-        onClose={() => setChatOpen(false)}
-      />
+      {profesionalId && (
+        <ChatModal
+          idCliente={user.id}
+          idProfesional={profesionalId}
+          userId={user.id}
+          isOpen={chatOpen}
+          onClose={() => setChatOpen(false)}
+        />
+      )}
 
       {/* MODAL DE ÉXITO */}
       {showSuccessModal && (
@@ -378,7 +446,7 @@ function ClienteDashboardContent() {
             onClick={() => setShowSuccessModal(false)}
           />
 
-          <div className="relative bg-white rounded-2xl shadow-xl p-10 max-w-md w-[90%]">
+          <div className="relative bg-white rounded-2xl shadow-xl p-10 max-w-md w-[90%] animate-scaleIn">
             <div className="mx-auto mb-6 w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center shadow-inner">
               <span className="text-5xl">✓</span>
             </div>
@@ -392,7 +460,10 @@ function ClienteDashboardContent() {
             </p>
 
             <button
-              onClick={() => setShowSuccessModal(false)}
+              onClick={() => {
+                setShowSuccessModal(false);
+                window.location.href = "/cliente"; // limpiar URL
+              }}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl shadow hover:opacity-90 transition"
             >
               Continuar
@@ -412,10 +483,21 @@ function ClienteDashboardContent() {
   );
 }
 
-// Componente principal con Suspense
+/* =============================
+   EXPORT PRINCIPAL CON SUSPENSE
+============================= */
 export default function ClienteDashboard() {
   return (
-    <Suspense fallback={<div className="p-6">Cargando...</div>}>
+    <Suspense 
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando dashboard...</p>
+          </div>
+        </div>
+      }
+    >
       <ClienteDashboardContent />
     </Suspense>
   );
