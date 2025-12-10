@@ -55,7 +55,9 @@ export async function POST(req) {
     }
 
     // 3. Construir URLs seguras para Stripe
-    const baseUrl = getBaseUrl(); 
+    const baseUrl = getBaseUrl();
+    console.log("🔥 Stripe usando baseUrl:", baseUrl);
+
     const successUrl = `${baseUrl}/cliente?success=true&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${baseUrl}/cliente?canceled=true`;
 
@@ -68,7 +70,7 @@ export async function POST(req) {
         {
           price_data: {
             currency: "eur",
-            unit_amount: Math.round(servicio.precio * 100), // € → céntimos
+            unit_amount: Math.round(servicio.precio * 100),
             product_data: { name: servicio.nombre },
           },
           quantity: 1,
