@@ -4,22 +4,20 @@ import Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { resend } from "@/lib/resendClient";
 
-export const runtime = "nodejs";     // 🔥 NECESARIO PARA WEBHOOKS
+export const runtime = "nodejs";     // Requerido por Stripe para validar firmas
 export const dynamic = "force-dynamic";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Convierte ReadableStream (App Router) en Buffer
+// Convertir ReadableStream a Buffer (App Router)
 async function getRawBody(req) {
   const reader = req.body.getReader();
   const chunks = [];
-
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     chunks.push(value);
   }
-
   return Buffer.concat(chunks);
 }
 
@@ -36,6 +34,7 @@ export async function POST(req) {
 
   const signature = req.headers.get("stripe-signature");
 
+  // 1. Validar firma
   try {
     event = stripe.webhooks.constructEvent(
       rawBody,
@@ -47,36 +46,33 @@ export async function POST(req) {
     return new NextResponse("Signature error", { status: 400 });
   }
 
-  // Solo nos interesa cuando el pago se ha completado
+  // 2. Solo procesamos pagos completados
   if (event.type !== "checkout.session.completed") {
     return NextResponse.json({ received: true });
   }
 
   const session = event.data.object;
 
- // 1. Metadata (coherente con crear-sesion-pago)
- const {
-  id_cliente,
-  id_profesional,
-  id_servicio,
-  id_franja_disponibilidad
-} = session.metadata || {};
+  // 3. Extraer metadata obligatoria
+  const {
+    id_cliente,
+    id_profesional,
+    id_servicio,
+    id_franja_disponibilidad
+  } = session.metadata || {};
 
-
-if (!id_cliente || !id_profesional || !id_servicio || !id_franja_disponibilidad) {
-  
-  return NextResponse.json({ error: "Metadata incompleta" }, { status: 400 });
-}
-
+  if (!id_cliente || !id_profesional || !id_servicio || !id_franja_disponibilidad) {
+    console.error("❌ Metadata incompleta en el webhook");
+    return NextResponse.json({ error: "Metadata incompleta" }, { status: 400 });
+  }
 
   const supabase = supabaseAdmin;
 
-  // 2. Obtener franja (y su profesional)
+  // 4. Obtener franja
   const { data: franja, error: frError } = await supabase
     .from("franjas_disponibilidad")
     .select("*")
     .eq("id", id_franja_disponibilidad)
-
     .single();
 
   if (frError || !franja) {
@@ -84,9 +80,7 @@ if (!id_cliente || !id_profesional || !id_servicio || !id_franja_disponibilidad)
     return NextResponse.json({ error: "Franja no encontrada" }, { status: 400 });
   }
 
-  
-
-  // 3. Obtener servicio
+  // 5. Obtener servicio
   const { data: servicio, error: servError } = await supabase
     .from("servicios")
     .select("*")
@@ -94,50 +88,55 @@ if (!id_cliente || !id_profesional || !id_servicio || !id_franja_disponibilidad)
     .single();
 
   if (servError || !servicio) {
-    console.error("❌ Servicio no encontrado:", servError);
+    console.error("❌ Servicio no encontrado");
     return NextResponse.json({ error: "Servicio no encontrado" }, { status: 400 });
   }
 
-  // 4. Crear cita
+  // 6. Crear la cita
   const { data: cita, error: citaError } = await supabase
-  .from("citas_sesiones")
-  .insert({
-    id_cliente,
-    id_profesional,
-    id_servicio,
-    id_franja_disponibilidad,
-    hora_inicio: franja.hora_inicio,
-    hora_fin: franja.hora_fin,
-    precio_acordado: servicio.precio,
-    estado_cita: "confirmada",
-    estado_pago: "pagado",
-    notas_cliente: "",
-  })
-  .select()
-  .single();
+    .from("citas_sesiones")
+    .insert({
+      id_cliente,
+      id_profesional,
+      id_servicio,
+      id_franja_disponibilidad,
+      hora_inicio: franja.hora_inicio,
+      hora_fin: franja.hora_fin,
+      precio_acordado: servicio.precio,
+      estado_cita: "confirmada",
+      estado_pago: "pagado",
+      notas_cliente: "",
+    })
+    .select()
+    .single();
 
   if (citaError) {
     console.error("❌ Error creando cita:", citaError);
     return NextResponse.json({ error: "Error creando cita" }, { status: 500 });
   }
 
-  // 5. Bloquear franja
+  // 7. Bloquear franja
   await supabase
     .from("franjas_disponibilidad")
     .update({ esta_disponible: false })
-    .eq("id", id_franja_disponibilidad)
+    .eq("id", id_franja_disponibilidad);
 
-  // 6. Registrar pago
-  await supabase.from("pagos").insert({
+  // 8. Registrar pago (CORREGIDO según tu tabla)
+  const { error: pagoError } = await supabase.from("pagos").insert({
     id_cliente,
     id_cita_sesion: cita.id,
-    cantidad: servicio.precio,
-    metodo: "stripe",
+    monto: servicio.precio,
+    metodo_pago: "stripe",
+    referencia_pago: session.id,
     estado_pago: "pagado",
-    stripe_session_id: session.id,
   });
 
-  // 7. Emails
+  if (pagoError) {
+    console.error("❌ Error registrando pago:", pagoError);
+    // No detenemos el proceso: la cita ya está creada
+  }
+
+  // 9. Enviar emails
   const { data: cliente } = await supabase
     .from("perfiles_usuarios")
     .select("nombre_completo, email")
@@ -156,6 +155,7 @@ if (!id_cliente || !id_profesional || !id_servicio || !id_franja_disponibilidad)
     minute: "2-digit",
   });
 
+  // Email paciente
   if (cliente?.email) {
     resend.emails.send({
       from: process.env.EMAIL_FROM,
@@ -170,11 +170,12 @@ if (!id_cliente || !id_profesional || !id_servicio || !id_franja_disponibilidad)
     });
   }
 
+  // Email profesional
   if (profesional?.email) {
     resend.emails.send({
       from: process.env.EMAIL_FROM,
       to: profesional.email,
-      subject: "Nueva cita reservada (pago completado)",
+      subject: "Nueva cita reservada",
       html: `
         <h2>Nueva cita reservada</h2>
         <p><strong>Paciente:</strong> ${cliente?.nombre_completo}</p>
@@ -185,5 +186,6 @@ if (!id_cliente || !id_profesional || !id_servicio || !id_franja_disponibilidad)
     });
   }
 
+  // 10. Responder a Stripe
   return NextResponse.json({ received: true });
 }
