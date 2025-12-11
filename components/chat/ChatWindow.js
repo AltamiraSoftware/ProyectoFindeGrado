@@ -17,7 +17,12 @@ export default function ChatWindow({ clienteId, profesionalId, userId }) {
 
   // 🟦 Datos del paciente
   const [datosPaciente, setDatosPaciente] = useState(null);
-  const [ultimaCita, setUltimaCita] = useState(null);
+
+  // 🟦 Próxima cita futura
+  const [proximaCita, setProximaCita] = useState(null);
+
+  // 🟦 Última sesión realizada
+  const [ultimaSesion, setUltimaSesion] = useState(null);
 
   /* ============================================================
       CARGAR DATOS DEL PACIENTE
@@ -39,22 +44,47 @@ export default function ChatWindow({ clienteId, profesionalId, userId }) {
   }, [clienteId]);
 
   /* ============================================================
-      CARGAR ÚLTIMA CITA DEL PACIENTE
+      CARGAR PRÓXIMA CITA FUTURA
   ============================================================ */
   useEffect(() => {
-    async function loadCita() {
+    async function loadProximaCita() {
+      const now = new Date().toISOString();
+
       const { data } = await supabase
         .from("citas_sesiones")
         .select("hora_inicio, estado_cita, servicios(nombre)")
         .eq("id_cliente", clienteId)
+        .gte("hora_inicio", now)
+        .order("hora_inicio", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      setProximaCita(data || null);
+    }
+
+    loadProximaCita();
+  }, [clienteId]);
+
+  /* ============================================================
+      CARGAR ÚLTIMA SESIÓN REALIZADA
+  ============================================================ */
+  useEffect(() => {
+    async function loadUltimaSesion() {
+      const now = new Date().toISOString();
+
+      const { data } = await supabase
+        .from("citas_sesiones")
+        .select("hora_inicio, estado_cita, servicios(nombre)")
+        .eq("id_cliente", clienteId)
+        .lt("hora_inicio", now)
         .order("hora_inicio", { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      setUltimaCita(data || null);
+      setUltimaSesion(data || null);
     }
 
-    loadCita();
+    loadUltimaSesion();
   }, [clienteId]);
 
   /* ============================================================
@@ -141,7 +171,7 @@ export default function ChatWindow({ clienteId, profesionalId, userId }) {
     <div className="h-full flex flex-col bg-white rounded-xl overflow-hidden shadow">
 
       {/* ============================================================
-          HEADER CORPORATIVO CON FICHA DEL PACIENTE
+          HEADER — DATOS DEL PACIENTE + CITAS
       ============================================================ */}
       <div className="px-5 py-4 bg-gradient-to-r from-blue-700 via-purple-700 to-pink-600 text-white shadow">
 
@@ -176,12 +206,13 @@ export default function ChatWindow({ clienteId, profesionalId, userId }) {
             </div>
           </div>
 
-          {/* ÚLTIMA CITA */}
-          {ultimaCita && (
+          {/* 🟢 PRÓXIMA CITA */}
+          {proximaCita && (
             <div className="mt-2 bg-white/10 rounded-lg p-3 text-sm backdrop-blur-sm border border-white/20">
-              <p className="font-semibold">📅 Última cita</p>
+              <p className="font-semibold">🟢 Próxima cita</p>
+
               <p>
-                {new Date(ultimaCita.hora_inicio).toLocaleDateString("es-ES", {
+                {new Date(proximaCita.hora_inicio).toLocaleDateString("es-ES", {
                   day: "2-digit",
                   month: "long",
                   year: "numeric",
@@ -190,17 +221,45 @@ export default function ChatWindow({ clienteId, profesionalId, userId }) {
 
               <p className="capitalize">
                 Estado:{" "}
-                <span className="font-medium">{ultimaCita.estado_cita}</span>
+                <span className="font-medium">{proximaCita.estado_cita}</span>
               </p>
 
               <p>
                 Servicio:{" "}
                 <span className="font-medium">
-                  {ultimaCita.servicios?.nombre || "—"}
+                  {proximaCita.servicios?.nombre || "—"}
                 </span>
               </p>
             </div>
           )}
+
+          {/* 📘 ÚLTIMA SESIÓN */}
+          {ultimaSesion && (
+            <div className="mt-2 bg-white/10 rounded-lg p-3 text-sm backdrop-blur-sm border border-white/20">
+              <p className="font-semibold">📘 Última sesión</p>
+
+              <p>
+                {new Date(ultimaSesion.hora_inicio).toLocaleDateString("es-ES", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+
+              <p className="capitalize">
+                Estado:{" "}
+                <span className="font-medium">{ultimaSesion.estado_cita}</span>
+              </p>
+
+              <p>
+                Servicio:{" "}
+                <span className="font-medium">
+                  {ultimaSesion.servicios?.nombre || "—"}
+                </span>
+              </p>
+            </div>
+          )}
+
         </div>
 
         {/* BOTÓN VIDEOLLAMADA */}

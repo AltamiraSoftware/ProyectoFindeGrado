@@ -396,7 +396,7 @@ function ClienteDashboardContent() {
             </div>
 
             {/* PRÓXIMAS CITAS */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-24">
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden  top-24">
               <div className="bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 p-6 text-white flex items-center gap-3">
                 <IconUser />
                 <h3 className="text-xl font-bold">Próximas citas</h3>

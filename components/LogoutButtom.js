@@ -17,7 +17,7 @@ export default function LogoutButtom() {
     <button
       onClick={handleLogout}
       className="
-        bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 
+        bg-gradient-to-r from-purple-600 to-pink-500
         text-white px-5 py-2 rounded-xl shadow-md 
         hover:opacity-90 transition
       "

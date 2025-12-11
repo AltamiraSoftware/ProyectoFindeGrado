@@ -17,8 +17,8 @@ export default function Hero({ openLogin, openRegister }) {
         {/* ------------------------------
             COLUMNA IZQUIERDA – TEXTOS
         -------------------------------- */}
-        <div className="space-y-6">
-          <h1 className="text-5xl md:text-6xl font-extrabold leading-tight text-gray-900">
+<div className="space-y-6 mt-10 md:mt-0 text-center md:text-left">
+<h1 className="text-4xl md:text-6xl font-extrabold leading-tight text-gray-900">
             Centraliza y automatiza
             <span className="block title-gradient">
               la administración de tu clínica.

@@ -131,8 +131,7 @@ export default function Features() {
   return (
     <section
       id="features"
-      className="py-24 md:py-32 min-h-screen;
-                 bg-gradient-to-br from-[#f3e8ff] via-[#e7d6ff] to-[#ffe4f3]"
+      className="py-24 md:py-32 min-h-screen bg-gradient-to-br from-[#f3e8ff] via-[#e7d6ff] to-[#ffe4f3]"
     >
       <div className="container mx-auto max-w-7xl px-4">
 

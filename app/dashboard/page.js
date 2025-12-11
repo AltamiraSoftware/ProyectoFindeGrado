@@ -389,9 +389,7 @@ export default function DashboardPage() {
       {/* RESUMEN SEMANAL */}
       <WeekSummary resumenSemana={resumenSemana} />
 
-      <div className="flex justify-end w-full max-w-5xl mx-auto mt-4">
-        <LogoutButtom />
-      </div>
+      
 
       {/* MODAL CREAR CITA */}
       <CreateAppoinmentModal

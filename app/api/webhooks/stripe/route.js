@@ -155,36 +155,37 @@ export async function POST(req) {
     minute: "2-digit",
   });
 
-  // Email paciente
-  if (cliente?.email) {
-    resend.emails.send({
-      from: process.env.EMAIL_FROM,
-      to: cliente.email,
-      subject: "Cita confirmada",
-      html: `
-        <h2>Cita Confirmada</h2>
-        <p>Hola ${cliente.nombre_completo},</p>
-        <p>Tu cita de <strong>${servicio.nombre}</strong> ha sido confirmada.</p>
-        <p><strong>${fecha} — ${hora}</strong></p>
-      `,
-    });
-  }
+ // Email paciente
+if (cliente?.email) {
+  await resend.emails.send({
+    from: process.env.EMAIL_FROM,
+    to: cliente.email,
+    subject: "Cita confirmada",
+    html: `
+      <h2>Cita Confirmada</h2>
+      <p>Hola ${cliente.nombre_completo},</p>
+      <p>Tu cita de <strong>${servicio.nombre}</strong> ha sido confirmada.</p>
+      <p><strong>${fecha} — ${hora}</strong></p>
+    `,
+  });
+}
 
-  // Email profesional
-  if (profesional?.email) {
-    resend.emails.send({
-      from: process.env.EMAIL_FROM,
-      to: profesional.email,
-      subject: "Nueva cita reservada",
-      html: `
-        <h2>Nueva cita reservada</h2>
-        <p><strong>Paciente:</strong> ${cliente?.nombre_completo}</p>
-        <p><strong>Servicio:</strong> ${servicio.nombre}</p>
-        <p><strong>${fecha} — ${hora}</strong></p>
-        <p>Estado del pago: <strong>PAGADO</strong></p>
-      `,
-    });
-  }
+// Email profesional
+if (profesional?.email) {
+  await resend.emails.send({
+    from: process.env.EMAIL_FROM,
+    to: profesional.email,
+    subject: "Nueva cita reservada",
+    html: `
+      <h2>Nueva cita reservada</h2>
+      <p><strong>Paciente:</strong> ${cliente?.nombre_completo}</p>
+      <p><strong>Servicio:</strong> ${servicio.nombre}</p>
+      <p><strong>${fecha} — ${hora}</strong></p>
+      <p>Estado del pago: <strong>PAGADO</strong></p>
+    `,
+  });
+}
+
 
   // 10. Responder a Stripe
   return NextResponse.json({ received: true });

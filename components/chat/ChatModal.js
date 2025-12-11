@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "@/hooks/useChat";
+import VideoCall from "@/components/VideoCall";
+import VideoPortal from "@/components/VideoPortal";
 
 export default function ChatModal({
   idCliente,
@@ -21,6 +23,10 @@ export default function ChatModal({
   const [texto, setTexto] = useState("");
   const bottomRef = useRef(null);
 
+  // 🔵 ESTADOS VIDEOLLAMADA
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [videoOpen, setVideoOpen] = useState(false);
+
   // AUTOSCROLL
   useEffect(() => {
     if (bottomRef.current) {
@@ -35,6 +41,54 @@ export default function ChatModal({
     setTexto("");
   };
 
+  // ---- LINKS CLICKABLES Y DETECCIÓN DAILY ----
+  const renderContenido = (contenido) => {
+    if (!contenido || typeof contenido !== "string") return contenido;
+
+    const urlRegex = /(https?:\/\/[^\s]+)/gi;
+    const dailyRegex = /(https?:\/\/[^\s]*daily\.co[^\s]*)/i;
+
+    const partes = contenido.split(urlRegex);
+
+    return (
+      <p>
+        {partes.map((part, i) => {
+          if (urlRegex.test(part)) {
+            // ENLACE ES VIDEOLLAMADA DAILY
+            if (dailyRegex.test(part)) {
+              return (
+                <button
+                  key={i}
+                  className="underline font-semibold text-blue-600 hover:text-blue-800"
+                  onClick={() => {
+                    setVideoUrl(part);
+                    setVideoOpen(true);
+                  }}
+                >
+                  Unirse a la videollamada
+                </button>
+              );
+            }
+
+            // ENLACE NORMAL
+            return (
+              <a
+                key={i}
+                href={part}
+                target="_blank"
+                rel="noreferrer"
+                className="underline font-semibold text-blue-600 hover:text-blue-800"
+              >
+                {part}
+              </a>
+            );
+          }
+          return <span key={i}>{part}</span>;
+        })}
+      </p>
+    );
+  };
+
   // SI NO ESTÁ ABIERTO → NO RENDERIZAR
   if (!isOpen) return null;
 
@@ -47,7 +101,7 @@ export default function ChatModal({
         onClick={onClose}
       />
 
-      {/* MODAL */}
+      {/* MODAL CHAT */}
       <div className="relative bg-white w-[90%] max-w-lg h-[80vh] rounded-2xl shadow-xl flex flex-col overflow-hidden">
 
         {/* HEADER */}
@@ -85,7 +139,7 @@ export default function ChatModal({
                       : "bg-white border border-gray-300"
                   }`}
                 >
-                  <p>{m.contenido}</p>
+                  {renderContenido(m.contenido)}
 
                   <p className="text-[10px] opacity-50 mt-1">
                     {new Date(m.creado_en).toLocaleTimeString("es-ES", {
@@ -101,7 +155,7 @@ export default function ChatModal({
           <div ref={bottomRef}></div>
         </div>
 
-        {/* INPUT — TOTALMENTE BLINDADO */}
+        {/* INPUT */}
         <form
           onSubmit={handleSubmit}
           className="p-4 bg-white border-t border-gray-300 flex items-center gap-3"
@@ -115,7 +169,6 @@ export default function ChatModal({
               border border-gray-300 rounded-lg shadow-sm
               text-sm focus:outline-none focus:ring-2 focus:ring-purple-500
             "
-            style={{ appearance: "none", WebkitAppearance: "none" }}
           />
 
           <button
@@ -125,8 +178,20 @@ export default function ChatModal({
             Enviar
           </button>
         </form>
-
       </div>
+
+      {/* MODAL VIDEOLLAMADA (igual que en profesional) */}
+      {videoOpen && videoUrl && (
+        <VideoPortal>
+          <VideoCall
+            roomUrl={videoUrl}
+            onClose={() => {
+              setVideoOpen(false);
+              setVideoUrl(null);
+            }}
+          />
+        </VideoPortal>
+      )}
     </div>
   );
 }

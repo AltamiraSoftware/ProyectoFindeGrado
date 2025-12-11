@@ -1,4 +1,4 @@
-// app/dashboard/chat/page.js
+
 "use client";
 
 import { useEffect, useState } from "react";
