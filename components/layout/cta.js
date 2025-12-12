@@ -3,7 +3,7 @@
 export default function CTA({ openLogin }) {
   return (
     <section
-      id="contacto"
+      id="cta"
       className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 min-h-screen"
     >
       

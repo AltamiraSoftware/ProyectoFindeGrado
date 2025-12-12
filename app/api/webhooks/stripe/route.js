@@ -1,4 +1,4 @@
-// app/api/webhooks/stripe/route.js
+
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";

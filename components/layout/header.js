@@ -38,7 +38,7 @@ export default function Header({ openLogin, openRegister }) {
 
           <button
             onClick={openLogin}
-            className="btn-secondary"
+            className="btn-primary"
           >
             Iniciar sesión
           </button>
@@ -94,7 +94,7 @@ export default function Header({ openLogin, openRegister }) {
           {/* botones auth */}
           <button
             onClick={() => { openLogin(); setOpen(false); }}
-            className="w-full btn-secondary"
+            className="w-full btn-primary"
           >
             Iniciar sesión
           </button>

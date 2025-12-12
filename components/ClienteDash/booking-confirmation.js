@@ -47,7 +47,7 @@ export default function BookingConfirmation({
           <ChevronLeft className="w-5 h-5 text-gray-600" />
         </button>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Confirma tu Cita</h2>
+          <h2 className="text-2xl font-bold !text-gray-900">Confirma tu Cita</h2>
           <p className="text-gray-600">Selecciona servicio y añade notas opcionales</p>
         </div>
       </div>
