@@ -33,12 +33,13 @@ export default function Header() {
         {/* LOGO + HOME */}
         <Link href="/cliente" className="flex items-center gap-3">
           <Image
-            src="/logo-psyclinic.svg"
-            alt="PsyClinic"
+            src="/logo-psymanage.svg"
+            alt="PsyManage"
             width={160}
             height={40}
             priority
             className="h-10 w-auto"
+            
           />
         </Link>
 

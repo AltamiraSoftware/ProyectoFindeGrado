@@ -15,14 +15,14 @@ export default function Header({ onOpenServicios }) {
         {/* LOGO + TITULO */}
         <Link href="/dashboard" className="flex items-center gap-2">
           <Image
-            src="/logo-psyclinic.svg"
-            alt="PsyClinic"
+            src="/logo-psymanage.svg"
+            alt="PsyManage"
             width={32}
             height={32}
             className="h-8 w-auto"
           />
           <span className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 leading-none">
-            Panel Profesional
+            Panel del Profesional
           </span>
         </Link>
 
@@ -71,8 +71,8 @@ export default function Header({ onOpenServicios }) {
           {/* ICONO EN MOBILE */}
           <div className="flex items-center gap-2 pt-2">
             <Image
-              src="/logo-psyclinic.svg"
-              alt="PsyClinic"
+              src="/logo-psymanage.svg"
+              alt="PsyManage"
               width={28}
               height={28}
               className="h-7 w-auto"

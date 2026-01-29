@@ -72,7 +72,9 @@ export async function POST(req) {
 
     return NextResponse.json({ success: true, data });
   } catch (err) {
-    console.error(err);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Email send error:", err.message);
+    }
     return NextResponse.json({ success: false, error: err.message });
   }
 }

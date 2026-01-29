@@ -185,6 +185,14 @@ select::-ms-expand {
   }
 }
 
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* =======================================================
    9. FULLCALENDAR (NO CAMBIAR POR AHORA)
    ======================================================= */

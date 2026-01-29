@@ -3,7 +3,7 @@
 import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import LogoutButtom from "@/components/LogoutButtom";
+import LogoutButton from "@/components/LogoutButtom";
 import { supabase } from "@/lib/supabaseClient";
 import "@/app/globals.css";
 import Header from "@/components/header";
@@ -53,7 +53,7 @@ export default function DashboardPage() {
   ==================================================== */
   useEffect(() => {
     if (!isLoading) {
-      if (!user) router.replace("/auth/login");
+      if (!user) router.replace("/");
       else if (user.rol !== "profesional") router.replace("/");
     }
   }, [user, isLoading, router]);

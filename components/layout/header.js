@@ -8,104 +8,74 @@ export default function Header({ openLogin, openRegister }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-lg shadow-sm">
+    <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-lg shadow-sm safe-area-inset-top">
       
-      {/* ================================
-          DESKTOP + MOBILE TOP BAR
-      ================================== */}
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      {/* DESKTOP + MOBILE TOP BAR */}
+      <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between min-h-[56px] sm:min-h-0">
         
         {/* LOGO + BRAND */}
-        <Link href="/" className="flex items-center gap-5">
-        <Image
-            src="/logo-psyclinic.svg"
-            alt="PsyClinic"
+        <Link href="/" className="flex items-center gap-2 sm:gap-5 shrink-0">
+          <Image
+            src="/logo-psymanage.svg"
+            alt="PsyManage"
             width={145}
             height={40}
             priority
-            className="h-10 w-auto"
+            className="h-8 sm:h-10 w-auto"
           />
-          <span className="text-2xl font-extrabold text-gradient hidden sm:block ">
-            PsyClinic
+          <span className="text-xl sm:text-2xl font-extrabold text-gradient hidden sm:block">
+            PsyManage
           </span>
         </Link>
 
         {/* NAV DESKTOP */}
         <nav className="hidden md:flex items-center gap-8">
-
           <Link href="#features" className="nav-link">Servicios</Link>
           <Link href="#cta" className="nav-link">Contacto</Link>
-
-          <button
-            onClick={openLogin}
-            className="btn-primary"
-          >
-            Iniciar sesión
-          </button>
-
-          <button
-            onClick={openRegister}
-            className="btn-primary"
-          >
-            Registrarse
-          </button>
+          <button onClick={openLogin} className="btn-primary">Iniciar sesión</button>
+          <button onClick={openRegister} className="btn-primary">Registrarse</button>
         </nav>
 
-        {/* MOBILE MENU BUTTON */}
+        {/* MOBILE MENU BUTTON - área táctil mínima 44px */}
         <button
           onClick={() => setOpen(!open)}
-          className="md:hidden text-gray-800 p-2 rounded-lg hover:bg-gray-100"
-          aria-label="Abrir menú"
+          className="md:hidden text-gray-800 p-3 -m-2 rounded-xl hover:bg-gray-100 active:bg-gray-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+          aria-label={open ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={open}
         >
-          <svg width="28" height="28" stroke="currentColor" fill="none">
-            <path strokeWidth="2" d="M4 7h20M4 14h20M4 21h20" />
+          <svg className="w-6 h-6" stroke="currentColor" fill="none" strokeWidth="2">
+            {open ? (
+              <path d="M6 6l12 12M18 6L6 18" />
+            ) : (
+              <path d="M4 7h20M4 14h20M4 21h20" />
+            )}
           </svg>
         </button>
       </div>
 
-      {/* ================================
-          MOBILE MENU
-      ================================== */}
+      {/* MOBILE MENU */}
       {open && (
-        <div className="md:hidden px-4 pb-5 pt-2 space-y-5 bg-white/95 backdrop-blur-md shadow-md animate-fadeIn">
-
-          {/* LOGO EN MOBILE MENU */}
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo-psyclinic.svg"
-              alt="PsyClinic"
-              width={120}
-              height={32}
-              className="h-8 w-auto"
-            />
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-              PsyClinic
-            </span>
-          </div>
-
-          <Link href="#features" className="mobile-link" onClick={() => setOpen(false)}>
+        <div className="md:hidden px-4 sm:px-6 pb-6 pt-2 space-y-1 bg-white/98 backdrop-blur-md shadow-lg border-t border-gray-100 animate-fadeIn">
+          <Link href="#features" className="mobile-link block py-4 text-base font-medium text-gray-800 border-b border-gray-100" onClick={() => setOpen(false)}>
             Servicios
           </Link>
-
-          <Link href="#cta" className="mobile-link" onClick={() => setOpen(false)}>
+          <Link href="#cta" className="mobile-link block py-4 text-base font-medium text-gray-800 border-b border-gray-100" onClick={() => setOpen(false)}>
             Contacto
           </Link>
-
-          {/* botones auth */}
-          <button
-            onClick={() => { openLogin(); setOpen(false); }}
-            className="w-full btn-primary"
-          >
-            Iniciar sesión
-          </button>
-
-          <button
-            onClick={() => { openRegister(); setOpen(false); }}
-            className="w-full btn-primary"
-          >
-            Registrarse
-          </button>
-
+          <div className="pt-4 flex flex-col gap-3">
+            <button
+              onClick={() => { openLogin(); setOpen(false); }}
+              className="w-full btn-primary py-3.5 text-base min-h-[48px]"
+            >
+              Iniciar sesión
+            </button>
+            <button
+              onClick={() => { openRegister(); setOpen(false); }}
+              className="w-full btn-secondary py-3.5 text-base min-h-[48px]"
+            >
+              Registrarse
+            </button>
+          </div>
         </div>
       )}
     </header>

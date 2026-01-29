@@ -33,7 +33,9 @@ export async function GET(req) {
     });
 
   } catch (err) {
-    console.error("Stripe get-session error:", err);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Stripe get-session error:", err.message);
+    }
     return NextResponse.json(
       { error: err.message },
       { status: 500 }

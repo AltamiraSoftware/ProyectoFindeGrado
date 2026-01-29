@@ -237,22 +237,10 @@ function ClienteDashboardContent() {
 
     // Validar que la franja existe
     if (!franjaObj || !franjaObj.id) {
-      console.error("❌ Franja no encontrada:", {
-        selectedDate,
-        selectedTime,
-        availabilityData: availabilityData[selectedDate]
-      });
       alert("❌ Error: la franja horaria ya no está disponible. Por favor, selecciona otra hora.");
       handleReset(); // Reiniciar selección
       return;
     }
-
-    console.log("✅ Creando sesión de pago con:", {
-      id_cliente: user.id,
-      id_servicio: selectedService,
-      id_franja: franjaObj.id,
-      hora_inicio: franjaObj.hora_inicio
-    });
 
     try {
       const res = await fetch("/api/cliente/crear-sesion-pago", {
@@ -267,7 +255,6 @@ function ClienteDashboardContent() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        console.error("❌ Error del servidor:", errorData);
         alert(`❌ Error: ${errorData.error || "No se pudo crear la sesión de pago"}`);
         return;
       }
@@ -280,13 +267,11 @@ function ClienteDashboardContent() {
       }
 
       if (data.url) {
-        console.log("✅ Redirigiendo a Stripe...");
         window.location.href = data.url;
       } else {
         alert("❌ Error: no se recibió URL de pago");
       }
-    } catch (error) {
-      console.error("❌ Error de red:", error);
+    } catch {
       alert("❌ Error de conexión. Por favor, inténtalo de nuevo.");
     }
   }

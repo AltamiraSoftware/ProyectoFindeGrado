@@ -31,7 +31,6 @@ export async function POST(req) {
       .single();
 
     if (servError || !servicio) {
-      console.error("❌ Servicio no encontrado:", servError);
       return NextResponse.json({ error: "Servicio no encontrado" }, { status: 404 });
     }
 
@@ -43,7 +42,6 @@ export async function POST(req) {
       .single();
 
     if (frError || !franja) {
-      console.error("❌ Franja no encontrada:", frError);
       return NextResponse.json({ error: "Franja no encontrada" }, { status: 404 });
     }
 
@@ -56,8 +54,6 @@ export async function POST(req) {
 
     // 3. Construir URLs seguras para Stripe
     const baseUrl = getBaseUrl();
-    console.log("🔥 Stripe usando baseUrl:", baseUrl);
-
     const successUrl = `${baseUrl}/cliente?success=true&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${baseUrl}/cliente?canceled=true`;
 
@@ -91,7 +87,9 @@ export async function POST(req) {
     return NextResponse.json({ url: session.url });
 
   } catch (err) {
-    console.error("❌ Error creando sesión Stripe:", err);
+    if (process.env.NODE_ENV === "development") {
+      console.error("❌ Error creando sesión Stripe:", err.message);
+    }
     return NextResponse.json(
       { error: err.message ?? "Error desconocido" },
       { status: 500 }

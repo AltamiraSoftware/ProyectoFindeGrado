@@ -131,30 +131,30 @@ export default function Features() {
   return (
     <section
       id="features"
-      className="py-24 md:py-32 min-h-screen bg-gradient-to-br from-[#f3e8ff] via-[#e7d6ff] to-[#ffe4f3]"
+      className="py-14 sm:py-20 md:py-28 lg:py-32 bg-gradient-to-br from-[#f3e8ff] via-[#e7d6ff] to-[#ffe4f3]"
     >
-      <div className="container mx-auto max-w-7xl px-4">
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6">
 
         {/* TITLE */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-extrabold !text-gray-900">
+        <div className="text-center mb-10 sm:mb-14 md:mb-16">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold !text-gray-900 px-2">
             Características diseñadas para ti
           </h2>
-          <p className="text-lg text-gray-600 mt-4 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-600 mt-3 sm:mt-4 max-w-2xl mx-auto px-2">
             Todo lo que necesitas para una experiencia fluida y confortable.
           </p>
         </div>
 
-        {/* GRID */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {/* GRID - 1 col móvil, más gap en móvil */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8 lg:gap-10">
           {features.map((feature, i) => (
             <div
               key={i}
               className="
-                relative p-8 rounded-2xl backdrop-blur-lg
+                relative p-5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl backdrop-blur-lg
                 bg-white/70 shadow-lg overflow-hidden
                 transition-all duration-300 cursor-pointer
-                hover:-translate-y-2 hover:shadow-2xl
+                hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-2xl
               "
               style={{
                 border: "2px solid transparent",
@@ -164,38 +164,16 @@ export default function Features() {
                 backgroundClip: "padding-box, border-box",
               }}
             >
+              <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-blue-300/30 mix-blend-multiply transition-all duration-300 hover:bg-blue-400/50" />
 
-              {/* OVERLAY INTERIOR (siempre visible, más fuerte al hover) */}
-              <div
-  className="
-    absolute inset-0 rounded-2xl 
-    bg-blue-300/30
-    mix-blend-multiply
-    transition-all duration-300
-    hover:bg-blue-400/50
-  "
-></div>
-
-
-              {/* CONTENT */}
               <div className="relative z-10">
-                {/* ICON */}
-                <div
-                  className="
-                    w-16 h-16 flex items-center justify-center mx-auto mb-6
-                    rounded-xl shadow-lg
-                    bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500
-                    text-white
-                  "
-                >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-4 sm:mb-6 rounded-xl shadow-lg bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 text-white">
                   {feature.icon}
                 </div>
-
-                <h3 className="text-xl font-semibold !text-gray-900 text-center mb-3">
+                <h3 className="text-lg sm:text-xl font-semibold !text-gray-900 text-center mb-2 sm:mb-3">
                   {feature.title}
                 </h3>
-
-                <p className="text-gray-700 text-center leading-relaxed">
+                <p className="text-sm sm:text-base text-gray-700 text-center leading-relaxed">
                   {feature.description}
                 </p>
               </div>

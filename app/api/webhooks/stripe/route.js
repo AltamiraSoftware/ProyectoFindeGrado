@@ -28,7 +28,9 @@ export async function POST(req) {
   try {
     rawBody = await getRawBody(req);
   } catch (err) {
-    console.error("❌ No se pudo leer el body del webhook:", err);
+    if (process.env.NODE_ENV === "development") {
+      console.error("❌ No se pudo leer el body del webhook:", err.message);
+    }
     return new NextResponse("Bad Request", { status: 400 });
   }
 
@@ -42,7 +44,9 @@ export async function POST(req) {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.error("⛔ Firma inválida:", err.message);
+    if (process.env.NODE_ENV === "development") {
+      console.error("⛔ Firma inválida:", err.message);
+    }
     return new NextResponse("Signature error", { status: 400 });
   }
 
@@ -62,7 +66,6 @@ export async function POST(req) {
   } = session.metadata || {};
 
   if (!id_cliente || !id_profesional || !id_servicio || !id_franja_disponibilidad) {
-    console.error("❌ Metadata incompleta en el webhook");
     return NextResponse.json({ error: "Metadata incompleta" }, { status: 400 });
   }
 
@@ -76,7 +79,6 @@ export async function POST(req) {
     .single();
 
   if (frError || !franja) {
-    console.error("❌ Franja no encontrada:", frError);
     return NextResponse.json({ error: "Franja no encontrada" }, { status: 400 });
   }
 
@@ -88,7 +90,6 @@ export async function POST(req) {
     .single();
 
   if (servError || !servicio) {
-    console.error("❌ Servicio no encontrado");
     return NextResponse.json({ error: "Servicio no encontrado" }, { status: 400 });
   }
 
@@ -111,7 +112,9 @@ export async function POST(req) {
     .single();
 
   if (citaError) {
-    console.error("❌ Error creando cita:", citaError);
+    if (process.env.NODE_ENV === "development") {
+      console.error("❌ Error creando cita:", citaError.message);
+    }
     return NextResponse.json({ error: "Error creando cita" }, { status: 500 });
   }
 
@@ -131,8 +134,8 @@ export async function POST(req) {
     estado_pago: "pagado",
   });
 
-  if (pagoError) {
-    console.error("❌ Error registrando pago:", pagoError);
+  if (pagoError && process.env.NODE_ENV === "development") {
+    console.error("❌ Error registrando pago:", pagoError.message);
     // No detenemos el proceso: la cita ya está creada
   }
 
