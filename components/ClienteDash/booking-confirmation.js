@@ -48,7 +48,7 @@ export default function BookingConfirmation({
         </button>
         <div>
           <h2 className="text-2xl font-bold !text-gray-900">Confirma tu Cita</h2>
-          <p className="text-gray-600">Selecciona servicio y añade notas opcionales</p>
+          <p className="text-gray-900">Selecciona servicio y añade notas opcionales</p>
         </div>
       </div>
 

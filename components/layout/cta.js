@@ -17,7 +17,7 @@ export default function CTA({ openLogin }) {
           </h2>
 
           <p className="text-base sm:text-lg !text-gray-600 max-w-2xl mx-auto px-2">
-            PsyClinic ha sido desarrollado por AltamiraSoftware. Es un proyecto dedicado a crear soluciones SaaS (Software como Servicio).
+            PsyManage ha sido desarrollado por AltamiraSoftware. Es un proyecto dedicado a crear soluciones SaaS (Software como Servicio).
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center pt-4 sm:pt-8">

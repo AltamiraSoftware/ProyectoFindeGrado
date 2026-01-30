@@ -440,7 +440,7 @@ function ClienteDashboardContent() {
               ¡Pago completado!
             </h2>
 
-            <p className="text-gray-600 text-center mb-8">
+            <p className="text-gray-900 text-center mb-8">
               Tu cita ha sido confirmada correctamente.
             </p>
 
